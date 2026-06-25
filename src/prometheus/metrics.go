@@ -72,13 +72,22 @@ func UpdateMetrics(status *wallboxApi.Status) {
 
 	voltage, current, power := 0.0, 0.0, 0.0
 	if len(status.Nrg) > 0 {
+		// nrg[0] is Phase 1 voltage in volts
 		voltage = status.Nrg[0]
 	}
-	if len(status.Nrg) > 1 {
-		current = status.Nrg[1]
+	if len(status.Nrg) > 4 {
+		// nrg[4..6] are phase currents in 0.1 A
+		current += status.Nrg[4] / 10.0
 	}
-	if len(status.Nrg) > 2 {
-		power = status.Nrg[2]
+	if len(status.Nrg) > 5 {
+		current += status.Nrg[5] / 10.0
+	}
+	if len(status.Nrg) > 6 {
+		current += status.Nrg[6] / 10.0
+	}
+	if len(status.Nrg) > 11 {
+		// nrg[11] is total power in 0.1 W
+		power = status.Nrg[11] / 10.0
 	}
 
 	WallboxVoltageVolts.Set(voltage)
