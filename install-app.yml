@@ -1,0 +1,45 @@
+---
+- name: Create app directory
+  ansible.builtin.file:
+    path: /opt/wallbox-monitor/bin/
+    state: directory
+    mode: '0644'
+    owner: "root"
+    group: "root"
+    recurse: true
+
+- name: Copy application binary
+  ansible.builtin.copy:
+    src: "bin/wallbox-monitor_linux-{{ arch_map[ansible_architecture] | default(ansible_architecture) }}"
+    dest: "/opt/wallbox-monitor/bin/wallbox-monitor"
+    owner: root
+    group: root
+    mode: '0755'
+  vars:
+    arch_map:
+      i386: 386
+      x86_64: amd64
+      armv7l: arm
+      aarch64: arm64
+  register: new_app
+
+- name: Copy systemd service
+  ansible.builtin.copy:
+    src: "wallbox-monitor.service"
+    dest: "/lib/systemd/system/wallbox-monitor.service"
+  register: new_svc
+
+- name: Open firewall port for Prometheus
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: '2112'
+    jump: ACCEPT
+  ignore_errors: true
+
+- name: Ensure service is enabled and started
+  ansible.builtin.systemd:
+    name: wallbox-monitor
+    enabled: true
+    state: "{{ (new_app.changed or new_svc.changed) | ternary('restarted', 'started') }}"
+    daemon_reload: true

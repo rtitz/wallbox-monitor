@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "rct-monitor",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/src",
+            "env": {},
+            // The -- here is key, telling delve to pass arguments after it to your code
+            //"args": ["--", "-tracker", "/Volumes/external-0/neue-unsortierte-Fotos/Rene/files.copied", "-source", "/Volumes/external-0/neue-unsortierte-Fotos/Rene/Rene’s iPhone", "-destination", "/Volumes/external-0/neue-unsortierte-Fotos/Rene/vorsortiert"], 
+            //"args": ["-tracker", "/Volumes/external-0/neue-unsortierte-Fotos/Rene/files.copied", "-source", "/Volumes/external-0/neue-unsortierte-Fotos/Rene/Rene’s iPhone", "-destination", "/Volumes/external-0/neue-unsortierte-Fotos/Rene/vorsortiert"], 
+            // This controls the Working directory the code runs in, as my config.lgpriv.toml in my root 
+            // I want the working dir to be the workspace root
+            "cwd": "${workspaceRoot}", 
+            "showLog": true
+        }
+    ]
+}
