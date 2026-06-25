@@ -10,7 +10,7 @@
 
 - name: Copy application binary
   ansible.builtin.copy:
-    src: "bin/wallbox-monitor_linux-{{ arch_map[ansible_architecture] | default(ansible_architecture) }}"
+    src: "bin/wallbox-monitor_linux-{{ arch_map[ansible_facts['architecture']] | default(ansible_facts['architecture']) }}"
     dest: "/opt/wallbox-monitor/bin/wallbox-monitor"
     owner: root
     group: root
