@@ -10,7 +10,7 @@ import (
 // App information
 const (
 	AppName    = "wallbox-monitor"
-	AppVersion = "1.0.1"
+	AppVersion = "1.0.2"
 )
 
 // Configuration constants

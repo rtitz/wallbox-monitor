@@ -71,23 +71,27 @@ func UpdateMetrics(status *wallboxApi.Status) {
 	WallboxAmpLimitAmps.Set(float64(status.Amp))
 
 	voltage, current, power := 0.0, 0.0, 0.0
-	if len(status.Nrg) > 0 {
-		// nrg[0] is Phase 1 voltage in volts
+	nrgLen := len(status.Nrg)
+
+	// nrg[0] is Phase 1 voltage in volts
+	if nrgLen > 0 {
 		voltage = status.Nrg[0]
 	}
-	if len(status.Nrg) > 4 {
-		// nrg[4..6] are phase currents in 0.1 A
-		current += status.Nrg[4] / 10.0
+
+	// nrg[4..6] are phase currents in Amperes for API v2
+	if nrgLen > 4 {
+		current += status.Nrg[4]
 	}
-	if len(status.Nrg) > 5 {
-		current += status.Nrg[5] / 10.0
+	if nrgLen > 5 {
+		current += status.Nrg[5]
 	}
-	if len(status.Nrg) > 6 {
-		current += status.Nrg[6] / 10.0
+	if nrgLen > 6 {
+		current += status.Nrg[6]
 	}
-	if len(status.Nrg) > 11 {
-		// nrg[11] is total power in 0.1 W
-		power = status.Nrg[11] / 10.0
+
+	// nrg[11] is total power in Watts for API v2
+	if nrgLen > 11 {
+		power = status.Nrg[11]
 	}
 
 	WallboxVoltageVolts.Set(voltage)
@@ -97,6 +101,7 @@ func UpdateMetrics(status *wallboxApi.Status) {
 	WallboxSessionEnergyDws.Set(status.Dws)
 	WallboxPhaseMode.Set(float64(status.Psm))
 	WallboxOverrideState.Set(float64(status.Frc))
+
 	if status.Alw {
 		WallboxChargeAllowed.Set(1)
 	} else {
