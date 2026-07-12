@@ -16,6 +16,7 @@ func CreateJsonStringFromWallbox(Date, Time, TimeZone string, status *wallboxApi
 		Time:     Time,
 		TimeZone: TimeZone,
 		Car:      status.Car,
+		Ust:      status.Ust,
 		Amp:      status.Amp,
 		Nrg:      status.Nrg,
 		Wh:       status.Wh,

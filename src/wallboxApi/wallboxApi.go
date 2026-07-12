@@ -47,6 +47,7 @@ func (b *BoolInt) UnmarshalJSON(data []byte) error {
 
 type Status struct {
 	Car int       `json:"car"`
+	Ust int       `json:"ust"`
 	Amp int       `json:"amp"`
 	Nrg []float64 `json:"nrg"`
 	Wh  float64   `json:"wh"`

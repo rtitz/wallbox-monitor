@@ -10,7 +10,7 @@ import (
 // App information
 const (
 	AppName    = "wallbox-monitor"
-	AppVersion = "1.0.2"
+	AppVersion = "1.0.3"
 )
 
 // Configuration constants
@@ -49,6 +49,7 @@ type JsonData struct {
 	Time     string    `json:"Time"`
 	TimeZone string    `json:"TimeZone"`
 	Car      int       `json:"Car"`
+	Ust      int       `json:"Ust"`
 	Amp      int       `json:"Amp"`
 	Nrg      []float64 `json:"Nrg"`
 	Wh       float64   `json:"Wh"`
@@ -68,6 +69,7 @@ type WallboxApiCall struct {
 
 var WallboxApiCalls = []WallboxApiCall{
 	{Name: "car", Enabled: true, Filter: "car", Description: "Car state (unknown, idle, charging, wait car, finished)"},
+	{Name: "ust", Enabled: true, Filter: "ust", Description: "User token / RFID chip ID"},
 	{Name: "amp", Enabled: true, Filter: "amp", Description: "Requested current limit in Amperes"},
 	{Name: "nrg", Enabled: true, Filter: "nrg", Description: "Electrical measurement array: voltage, current, total power"},
 	{Name: "wh", Enabled: true, Filter: "wh", Description: "Life-to-date total charged energy in Watt-hours"},

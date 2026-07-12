@@ -64,6 +64,11 @@ var (
 		Name: "wallbox_temp_celsius",
 		Help: "Wallbox internal temperature sensors in degrees Celsius",
 	}, []string{"sensor"})
+
+	WallboxUserToken = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "wallbox_user_token",
+		Help: "The active RFID user token ID (0=Open, 1=RFID 1, 2=Guest, etc.)",
+	})
 )
 
 func UpdateMetrics(status *wallboxApi.Status) {
@@ -96,11 +101,21 @@ func UpdateMetrics(status *wallboxApi.Status) {
 
 	WallboxVoltageVolts.Set(voltage)
 	WallboxCurrentAmps.Set(current)
-	WallboxPowerWatts.Set(power)
-	WallboxTotalEnergyWh.Set(status.Wh)
-	WallboxSessionEnergyDws.Set(status.Dws)
 	WallboxPhaseMode.Set(float64(status.Psm))
 	WallboxOverrideState.Set(float64(status.Frc))
+
+	// ROUTING LOGIC: Isolate your car (Ust 0 or 1) from any Guests (Ust 2+)
+	if status.Ust == 0 || status.Ust == 1 {
+		// Your car is charging: Update existing metrics normally
+		WallboxPowerWatts.Set(power)
+		WallboxTotalEnergyWh.Set(status.Wh)
+		WallboxSessionEnergyDws.Set(status.Dws)
+	} else {
+		// A Guest is charging: Freeze your car metrics
+		WallboxPowerWatts.Set(0) // Set power to 0 so your solar/grid rules ignore the guest
+		// Do NOT update WallboxTotalEnergyWh and WallboxSessionEnergyDws here.
+		// This keeps your car odometer frozen at its last value while the guest charges.
+	}
 
 	if status.Alw {
 		WallboxChargeAllowed.Set(1)
@@ -111,4 +126,6 @@ func UpdateMetrics(status *wallboxApi.Status) {
 	for idx, tma := range status.Tma {
 		WallboxTempCelsius.WithLabelValues(strconv.Itoa(idx)).Set(tma)
 	}
+
+	WallboxUserToken.Set(float64(status.Ust))
 }
