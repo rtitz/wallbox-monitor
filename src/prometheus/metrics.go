@@ -69,6 +69,11 @@ var (
 		Name: "wallbox_user_token",
 		Help: "The active RFID user token ID (0=Open, 1=RFID 1, 2=Guest, etc.)",
 	})
+
+	WallboxGuestTotalEnergyWh = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "wallbox_guest_total_energy_wh",
+		Help: "Wallbox total charged energy in watt-hours for any guest users",
+	})
 )
 
 func UpdateMetrics(status *wallboxApi.Status) {
@@ -115,6 +120,8 @@ func UpdateMetrics(status *wallboxApi.Status) {
 		WallboxPowerWatts.Set(0) // Set power to 0 so your solar/grid rules ignore the guest
 		// Do NOT update WallboxTotalEnergyWh and WallboxSessionEnergyDws here.
 		// This keeps your car odometer frozen at its last value while the guest charges.
+
+		WallboxGuestTotalEnergyWh.Set(status.Wh)
 	}
 
 	if status.Alw {
