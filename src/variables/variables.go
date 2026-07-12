@@ -10,7 +10,7 @@ import (
 // App information
 const (
 	AppName    = "wallbox-monitor"
-	AppVersion = "1.0.3"
+	AppVersion = "1.0.4"
 )
 
 // Configuration constants
@@ -69,7 +69,7 @@ type WallboxApiCall struct {
 
 var WallboxApiCalls = []WallboxApiCall{
 	{Name: "car", Enabled: true, Filter: "car", Description: "Car state (unknown, idle, charging, wait car, finished)"},
-	{Name: "ust", Enabled: true, Filter: "ust", Description: "User token / RFID chip ID"},
+	{Name: "ust", Enabled: true, Filter: "trx", Description: "User token / RFID chip ID"},
 	{Name: "amp", Enabled: true, Filter: "amp", Description: "Requested current limit in Amperes"},
 	{Name: "nrg", Enabled: true, Filter: "nrg", Description: "Electrical measurement array: voltage, current, total power"},
 	{Name: "wh", Enabled: true, Filter: "wh", Description: "Life-to-date total charged energy in Watt-hours"},
