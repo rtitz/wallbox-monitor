@@ -4,7 +4,7 @@
 
   # Define your centralized configuration variables here
   vars:
-    wallbox_data_dir: "/mnt/cluster-volumes/wallbox-monitor"
+    data_dir: "/mnt/cluster-volumes/wallbox-monitor"
     listen_port: "2114"
     timezone: "Europe/Berlin"
 

@@ -94,7 +94,7 @@
       [Service]
       Type=simple
       TimeoutStartSec=5m
-      ExecStartPre=/usr/bin/mkdir -p {{ wallbox_data_dir }}
+      ExecStartPre=/usr/bin/mkdir -p {{ data_dir }}
       ExecStartPre=-/usr/bin/podman rm -f wallbox-monitor
       
       # Dynamically maps the host port to the internal container port
@@ -102,7 +102,7 @@
         -p 0.0.0.0:{{ listen_port }}:2114 \
         -e TZ={{ timezone}} \
         -v /etc/localtime:/etc/localtime:ro \
-        -v {{ wallbox_data_dir }}:/root/wallbox-monitor:Z \
+        -v {{ data_dir }}:/root/wallbox-monitor:Z \
         localhost/wallbox-monitor:latest
         
       ExecStop=/usr/bin/podman stop -t 10 wallbox-monitor
