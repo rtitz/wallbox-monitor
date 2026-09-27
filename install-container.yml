@@ -1,0 +1,134 @@
+---
+- name: Ensure Podman and Rsync are installed on the Pi
+  ansible.builtin.package:
+    name:
+      - podman
+      - rsync  # Required for the synchronize module to work
+    state: present
+
+- name: Ensure IP forwarding is enabled in the Linux kernel
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: true
+    state: present
+    reload: true
+
+- name: Enable Podman safe automatic cleanup timer
+  ansible.builtin.systemd:
+    name: podman-auto-update.timer
+    enabled: true
+    state: started
+
+- name: Create safe weekly Podman cleanup service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/podman-safe-clean.service
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Safe Weekly Podman Image Prune
+      After=podman.service
+
+      [Service]
+      Type=oneshot
+      # This cleans dangling build caches but leaves your base Go compiler safe
+      ExecStart=/usr/bin/podman image prune -f
+
+  # Create a timer that schedules the cleanup service
+- name: Create weekly schedule timer for Podman cleanup
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/podman-safe-clean.timer
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Run safe Podman cleanup weekly
+
+      [Timer]
+      OnCalendar=Sun *-*-* 00:00:00
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target
+
+- name: Enable and start the safe cleanup timer
+  ansible.builtin.systemd:
+    name: podman-safe-clean.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Synchronize project source code from Mac to Pi
+  ansible.builtin.synchronize:
+    src: "./"  # Local folder path on your Mac containing Dockerfile and src/
+    dest: "/opt/wallbox-monitor/"
+    delete: true
+    recursive: true
+  register: source_code
+
+- name: Build the optimized container image on-the-fly on the Pi
+  containers.podman.podman_image:
+    name: wallbox-monitor
+    tag: latest
+    path: "/opt/wallbox-monitor"         
+    state: build
+    build:
+      format: docker
+      force_rm: "{{ source_code.changed }}"
+  register: new_image
+
+- name: Copy production systemd service template
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/wallbox-monitor.service
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Podman Wallbox Monitor Container Service
+      After=network-online.target
+
+      [Service]
+      Type=simple
+      TimeoutStartSec=5m
+      ExecStartPre=/usr/bin/mkdir -p {{ wallbox_data_dir }}
+      ExecStartPre=-/usr/bin/podman rm -f wallbox-monitor
+      
+      # Dynamically maps the host port to the internal container port
+      ExecStart=/usr/bin/podman run --name wallbox-monitor \
+        -p 0.0.0.0:{{ listen_port }}:2114 \
+        -e TZ={{ timezone}} \
+        -v /etc/localtime:/etc/localtime:ro \
+        -v {{ wallbox_data_dir }}:/root/wallbox-monitor:Z \
+        localhost/wallbox-monitor:latest
+        
+      ExecStop=/usr/bin/podman stop -t 10 wallbox-monitor
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+  register: new_svc
+
+- name: Open firewall port for Prometheus
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "{{ listen_port }}"
+    jump: ACCEPT
+  ignore_errors: true
+
+
+- name: Ensure service is enabled and started
+  ansible.builtin.systemd:
+    name: wallbox-monitor
+    enabled: true
+    state: "{{ (new_image.changed or new_svc.changed) | ternary('restarted', 'started') }}"
+    daemon_reload: true
+
+- name: Prune intermediate build image caches
+  ansible.builtin.command: /usr/bin/podman image prune -f
+  changed_when: false
+  

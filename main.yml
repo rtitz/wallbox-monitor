@@ -2,6 +2,12 @@
 - hosts: all
   become: true
 
+  # Define your centralized configuration variables here
+  vars:
+    wallbox_data_dir: "/mnt/cluster-volumes/wallbox-monitor"
+    listen_port: "2114"
+    timezone: "Europe/Berlin"
+
   pre_tasks:
     - name: Update package cache and install updates
       ansible.builtin.apt:
@@ -17,3 +23,4 @@
       when: ansible_facts['distribution'] not in ['Debian', 'Ubuntu']
 
     - ansible.builtin.import_tasks: install-app.yml
+    #- ansible.builtin.import_tasks: install-container.yml

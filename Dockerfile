@@ -1,19 +1,32 @@
-FROM alpine:3.19
+# --- Stage 1: Build the Go application ---
+FROM docker.io/library/golang:1.27.1-alpine AS builder
 
-# Create a non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Set the working directory inside the container
+WORKDIR /app
 
-# create directory and set ownership to appuser:appgroup
-RUN mkdir -p /home/appuser/wallbox-monitor \
- && chown -R appuser:appgroup /home/appuser/wallbox-monitor \
- && chmod 755 /home/appuser/wallbox-monitor
+# Copy dependency files first to leverage Docker build caching
+COPY src/go.mod src/go.sum ./
+RUN go mod download
 
-# Copy binary and set permissions
-COPY bin/wallbox-monitor_linux-arm64 /usr/local/bin/wallbox-monitor
-RUN chown appuser:appgroup /usr/local/bin/wallbox-monitor && chmod 755 /usr/local/bin/wallbox-monitor
+# Copy the rest of the application source code
+COPY src/ .
 
-USER appuser
+# Build a statically linked, production-optimized binary
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o wallbox-monitor .
 
-EXPOSE 2112
+# --- Stage 2: Final lightweight image ---
+FROM alpine:latest
 
-ENTRYPOINT ["/usr/local/bin/wallbox-monitor"]
+WORKDIR /app
+
+# Timezone data for the container
+RUN apk add --no-cache tzdata
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /app/wallbox-monitor .
+
+# Expose the Prometheus metrics port
+EXPOSE 2114
+
+# Run the binary
+CMD ["./wallbox-monitor"]

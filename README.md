@@ -3,11 +3,19 @@
 ### Build the binaries & run the Ansible playbook:
 ```zsh
 cd src && bash build.sh && cd .. && ansible-playbook -i inventory main.yml
+# If podman container:
+ansible-playbook -i inventory main.yml
 ```
 
 ### Example
 ```zsh
 journalctl -u wallbox-monitor -f
+```
+
+### Build Container
+```zsh
+podman build -t wallbox-monitor .
+podman run -d -p 0.0.0.0:2114:2114 wallbox-monitor
 ```
 
 ## Prometheus Integration
