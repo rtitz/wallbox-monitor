@@ -10,7 +10,7 @@ import (
 // App information
 const (
 	AppName    = "wallbox-monitor"
-	AppVersion = "1.0.5"
+	AppVersion = "1.0.6"
 )
 
 // Configuration constants
@@ -30,6 +30,7 @@ var (
 	WallboxIp      = "192.168.30.40"
 	WallboxPort    = "80"
 	PrometheusPort = "2114"
+	ForceIpv4      = false
 )
 
 // Runtime configuration
