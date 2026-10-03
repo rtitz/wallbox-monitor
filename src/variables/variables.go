@@ -30,7 +30,7 @@ var (
 	WallboxIp      = "192.168.30.40"
 	WallboxPort    = "80"
 	PrometheusPort = "2114"
-	ForceIpv4      = false
+	ForceIpv4      = true
 )
 
 // Runtime configuration
