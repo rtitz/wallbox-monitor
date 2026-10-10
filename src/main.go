@@ -16,8 +16,10 @@ import (
 	"wallbox-monitor/wallboxApi"
 )
 
+var BuildNumber = "development-build"
+
 func main() {
-	fmt.Printf("%s %s (%s/%s)\n\n", variables.AppName, variables.AppVersion, variables.GOOS, variables.GOARCH)
+	fmt.Printf("%s %s (%s/%s | Build: %s)\n\n", variables.AppName, variables.AppVersion, variables.GOOS, variables.GOARCH, BuildNumber)
 
 	time.Sleep(time.Millisecond * time.Duration(variables.StartDelayInMilliSeconds))
 	if variables.EnablePrometheus {

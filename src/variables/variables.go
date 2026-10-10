@@ -2,7 +2,6 @@ package variables
 
 import (
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 )
@@ -10,7 +9,7 @@ import (
 // App information
 const (
 	AppName    = "wallbox-monitor"
-	AppVersion = "1.0.6"
+	AppVersion = "1.0.7"
 )
 
 // Configuration constants
@@ -124,8 +123,9 @@ var (
 )
 
 func init() {
-	userHome, _ := os.UserHomeDir()
-	JsonFileLocation = filepath.Join(userHome, "wallbox-monitor")
+	//userHome, _ := os.UserHomeDir()
+	//JsonFileLocation = filepath.Join(userHome, "wallbox-monitor")
+	JsonFileLocation = "log/"
 
 	if env := os.Getenv("WALLBOX_IP"); env != "" {
 		WallboxIp = env

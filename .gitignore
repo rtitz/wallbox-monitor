@@ -19,3 +19,4 @@ secure*
 
 # Other stuff
 .DS_Store
+tmp/
