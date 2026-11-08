@@ -3,13 +3,21 @@ package variables
 import (
 	"os"
 	"runtime"
-	"strings"
 )
+
+// getEnv checks for an environment variable, returning the fallback if it doesn't exist
+func getEnv[T any](key string, fallback T) T {
+	if value, exists := os.LookupEnv(key); exists {
+		// Go requires converting to 'any' before type-asserting to our generic type T
+		return any(value).(T)
+	}
+	return fallback
+}
 
 // App information
 const (
 	AppName    = "wallbox-monitor"
-	AppVersion = "1.0.7"
+	AppVersion = "1.0.8"
 )
 
 // Configuration constants
@@ -26,19 +34,19 @@ const (
 
 // Configuration defaults that may be overridden by environment variables
 var (
-	WallboxIp      = "192.168.30.40"
-	WallboxPort    = "80"
-	PrometheusPort = "2114"
-	ForceIpv4      = true
+	WallboxIp      = getEnv("WALLBOX_IP", "192.168.30.40")
+	WallboxPort    = getEnv("WALLBOX_PORT", "80")
+	PrometheusPort = getEnv("PROMETHEUS_PORT", "2114")
+	ForceIpv4      = getEnv("FORCE_IPV4", true)
 )
 
 // Runtime configuration
 var (
 	ClearLoopOutput          = true
-	OutputJson               = true
-	WriteJsonToFile          = true
-	EnablePrometheus         = true
-	EnableHomeAssistant      = false
+	OutputJson               = getEnv("OUTPUT_JSON", true)
+	WriteJsonToFile          = getEnv("WRITE_JSON_TO_FILE", true)
+	EnablePrometheus         = getEnv("ENABLE_PROMETHEUS", true)
+	EnableHomeAssistant      = getEnv("ENABLE_HOME_ASSISTANT", false)
 	JsonFileLocation         string
 	ForceUpdateHomeAssistant bool
 )
@@ -105,15 +113,16 @@ var CalcValues = []CalcData{
 
 // HomeAssistant configuration
 var (
-	UrlHomeAssistant              = "http://192.168.1.8:8123"
-	TokenHomeAssistant            string
-	ApiBoolWallboxChargeAllowed   = "/api/states/input_boolean.wallbox_charge_allowed"
-	ApiIntWallboxAmpLimit         = "/api/states/input_number.wallbox_amp_limit_amps"
-	ApiIntWallboxPowerW           = "/api/states/input_number.wallbox_power_w"
-	ApiIntWallboxTotalEnergyWh    = "/api/states/input_number.wallbox_total_energy_wh"
-	ApiIntWallboxSessionEnergyDws = "/api/states/input_number.wallbox_session_energy_dws"
-	ApiIntWallboxPhaseMode        = "/api/states/input_number.wallbox_phase_mode"
-	ApiIntWallboxOverrideState    = "/api/states/input_number.wallbox_override_state"
+	UrlHomeAssistant              = getEnv("URL_HOME_ASSISTANT", "http://192.168.1.8:8123")
+	TokenHomeAssistantSecure      string
+	TokenHomeAssistant            = getEnv("TOKEN_HOME_ASSISTANT", TokenHomeAssistantSecure)
+	ApiBoolWallboxChargeAllowed   = getEnv("API_BOOL_WALLBOX_CHARGE_ALLOWED", "/api/states/input_boolean.wallbox_charge_allowed")
+	ApiIntWallboxAmpLimit         = getEnv("API_INT_WALLBOX_AMP_LIMIT", "/api/states/input_number.wallbox_amp_limit_amps")
+	ApiIntWallboxPowerW           = getEnv("API_INT_WALLBOX_POWER_W", "/api/states/input_number.wallbox_power_w")
+	ApiIntWallboxTotalEnergyWh    = getEnv("API_INT_WALLBOX_TOTAL_ENERGY_WH", "/api/states/input_number.wallbox_total_energy_wh")
+	ApiIntWallboxSessionEnergyDws = getEnv("API_INT_WALLBOX_SESSION_ENERGY_DWS", "/api/states/input_number.wallbox_session_energy_dws")
+	ApiIntWallboxPhaseMode        = getEnv("API_INT_WALLBOX_PHASE_MODE", "/api/states/input_number.wallbox_phase_mode")
+	ApiIntWallboxOverrideState    = getEnv("API_INT_WALLBOX_OVERRIDE_STATE", "/api/states/input_number.wallbox_override_state")
 )
 
 // System information
@@ -127,43 +136,8 @@ func init() {
 	//JsonFileLocation = filepath.Join(userHome, "wallbox-monitor")
 	JsonFileLocation = "log/"
 
-	if env := os.Getenv("WALLBOX_IP"); env != "" {
-		WallboxIp = env
-	}
-	if env := os.Getenv("WALLBOX_PORT"); env != "" {
-		WallboxPort = env
-	}
-	if env := os.Getenv("PROMETHEUS_PORT"); env != "" {
-		PrometheusPort = env
-	}
 	if env := os.Getenv("JSON_FILE_LOCATION"); env != "" {
 		JsonFileLocation = env
 	}
-	if env := os.Getenv("ENABLE_PROMETHEUS"); env != "" {
-		EnablePrometheus = parseBoolEnv(env, EnablePrometheus)
-	}
-	if env := os.Getenv("ENABLE_HOME_ASSISTANT"); env != "" {
-		EnableHomeAssistant = parseBoolEnv(env, EnableHomeAssistant)
-	}
-	if env := os.Getenv("WRITE_JSON_TO_FILE"); env != "" {
-		WriteJsonToFile = parseBoolEnv(env, WriteJsonToFile)
-	}
-	if env := os.Getenv("OUTPUT_JSON"); env != "" {
-		OutputJson = parseBoolEnv(env, OutputJson)
-	}
-	if env := os.Getenv("HOME_ASSISTANT_URL"); env != "" {
-		UrlHomeAssistant = env
-	}
-	TokenHomeAssistant = os.Getenv("HOME_ASSISTANT_TOKEN")
-}
 
-func parseBoolEnv(value string, defaultValue bool) bool {
-	switch strings.ToLower(strings.TrimSpace(value)) {
-	case "1", "true", "yes", "on":
-		return true
-	case "0", "false", "no", "off":
-		return false
-	default:
-		return defaultValue
-	}
 }

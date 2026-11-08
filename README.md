@@ -56,12 +56,47 @@ TMPDIR=/tmp docker run -d --name solar-monitor -p 2112:2112 -v /data/solar-monit
 TMPDIR=/tmp docker run -p 2112:2112 -v /data/solar-monitor:/home/appuser/solar-monitor:Z --rm solar-monitor:latest
 ```
 
+---
+
+## ⚙️ Configuration Parameter Reference
+
+The monitoring engine is completely dynamic and reads its environment configurations on startup. If an environment variable is missing, it safely falls back to its built-in out-of-the-box defaults.
+
+### Core Service & Runtime Variables
+
+| Environment Variable | Description | Expected Type | Default Value |
+| :--- | :--- | :--- | :--- |
+| **`WALLBOX_IP`** | Network destination IP address of your physical go-eCharger hardware. | String | `192.168.30.40` |
+| **`WALLBOX_PORT`** | Active HTTP port configuration of the physical wallbox hardware API. | String | `80` |
+| **`PROMETHEUS_PORT`** | Active network port binding configuration for exposing Prometheus metrics. | String | `2114` |
+| **`FORCE_IPV4`** | Binds network socket connection layers strictly to the IPv4 stack. | Boolean | `true` |
+| **`OUTPUT_JSON`** | Toggles whether compiled metrics are cleanly printed as JSON strings to stdout. | Boolean | `true` |
+| **`WRITE_JSON_TO_FILE`** | Toggles whether live state updates are continuously written to a local JSON file. | Boolean | `true` |
+| **`ENABLE_PROMETHEUS`** | Controls execution of the internal Prometheus metric scraping web server endpoint. | Boolean | `true` |
+| **`ENABLE_HOME_ASSISTANT`** | Master switch to toggle outbound state synchronization updates down to Home Assistant. | Boolean | `false` |
+
+---
+
+### Home Assistant Integration Variables
+
+| Environment Variable | Description | Expected Type | Default Value |
+| :--- | :--- | :--- | :--- |
+| **`URL_HOME_ASSISTANT`** | Target API URL endpoint of your active Home Assistant server instance. | String | `http://192.168.1.8:8123` |
+| **`TOKEN_HOME_ASSISTANT`** | Long-Lived Access Token generated from Home Assistant for secure REST authentication. | String | *(Uses dynamic secure token)* |
+| **`API_BOOL_WALLBOX_CHARGE_ALLOWED`** | Target entity API path mapping for checking if charging authorization is clear. | String | `/api/states/input_boolean.wallbox_charge_allowed` |
+| **`API_INT_WALLBOX_AMP_LIMIT`** | Target entity API path mapping for tracking requested charging limit parameters in Amperes. | String | `/api/states/input_number.wallbox_amp_limit_amps` |
+| **`API_INT_WALLBOX_POWER_W`** | Target entity API path mapping for tracking real-time electrical wallbox draw in Watts. | String | `/api/states/input_number.wallbox_power_w` |
+| **`API_INT_WALLBOX_TOTAL_ENERGY_WH`** | Target entity API path mapping for lifetime energy delivery accumulated metrics (Watt-hours). | String | `/api/states/input_number.wallbox_total_energy_wh` |
+| **`API_INT_WALLBOX_SESSION_ENERGY_DWS`** | Target entity API path mapping for the active charging loop session energy (Deciwatt-seconds). | String | `/api/states/input_number.wallbox_session_energy_dws` |
+| **`API_INT_WALLBOX_PHASE_MODE`** | Target entity API path mapping for tracked grid phase distribution (Single-Phase vs Three-Phase). | String | `/api/states/input_number.wallbox_phase_mode` |
+| **`API_INT_WALLBOX_OVERRIDE_STATE`** | Target entity API path mapping for manual override status tracking states. | String | `/api/states/input_number.wallbox_override_state` |
 
 
 ---
 
 # WALLBOX API (go-e Charger Gemini flex 11kW)
 
+```
 http://192.168.30.40/api/status # Fetches a single JSON object containing every single live state, configuration parameter, and sensor measurement.
 http://192.168.30.40/api/status?filter=all # Alternate explicit call ensuring all monitoring keys are generated uncompressed by the device.
 http://192.168.30.40/api/status?filter=car # Retrieves only the car status key (0: unknown, 1: idle, 2: charging, 3: wait car, 4: finished).
@@ -74,3 +109,4 @@ http://192.168.30.40/api/status?filter=frc # Retrieves only the charge control o
 http://192.168.30.40/api/status?filter=tmp # Retrieves only the device internal microprocessor temperatures array in degrees Celsius.
 http://192.168.30.40/api/status?filter=alw # Retrieves only the clear-to-charge status flag showing if vehicle power delivery is allowed.
 http://192.168.30.40/api/status?filter=car,amp,nrg,wh,dws,psm,frc,tmp,alw # Custom multi-filter call retrieving all key metrics simultaneously in one request.
+```

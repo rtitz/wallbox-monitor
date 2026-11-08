@@ -1,0 +1,8 @@
+package variables
+
+// COPY THIS FILE TO secureVariables.go AND FILL OUT THE MISSING VARIABLES
+
+
+func init() {
+	TokenHomeAssistantSecure = ""
+}
